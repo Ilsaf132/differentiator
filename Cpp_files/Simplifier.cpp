@@ -8,86 +8,109 @@
 
 void SimplificationTree(Tree* tree) {
 
-    printf("Trying to open counter!\n");
-    int new_counter = tree -> counter;
-    printf("Started Simplificacy!\n");
+    printf("\n\n\nStarted Simplificacy!\n");
+    int new_counter = 0;
 
-    while ((new_counter = SimplificationNode(tree -> root, new_counter)) != tree -> counter) {
+    while ((new_counter = SimplificationNode(tree -> root)) != 0) {
 
         GraphDump(tree -> root);
         printf("Trying after counter: %d!\n\n\n", new_counter);
-        tree -> counter = new_counter;
+        new_counter = 0;
 
     }
 
+    printf("END SIMPLIFICATION!\n\n\n");
+
 }
 
-int SimplificationNode(Node* node, int counter) {
+
+int SimplificationNode(Node* node) {
+
+    int counter = 0;
 
     if(node && node -> type == OPER) {
+        
 
         printf("Started simple for %p\n", node);
 
         Node* left = node -> left;
         Node* right = node -> right;
+
         if(IsBinary(node -> value)) {
 
             if(left -> type == NUM && right -> type == NUM) {
 
-                LeftRightNum(node, left, right);
                 printf("OPENED LEFT_RIGHT_NUM!\n");
+                LeftRightNum(node, left, right);
                 counter++;
 
-            } else if(!strcmp(left -> value, "1") && !strcmp(node -> value, "*")) {
+            } else if(left -> type == NUM && left -> value.NUM == 1 && node -> value.OPER == MUL) {
 
-                LeftMul1(node, left, right);
                 printf("OPENED LEFT_MUL1!\n");
+                LeftMul1(node, left, right);
                 counter++;
 
-            } else if(!strcmp(right -> value, "1") && (!strcmp(node -> value, "/") || !strcmp(node -> value, "*"))) {
+            } else if(right -> type == NUM && right -> value.NUM == 1 && (node -> value.OPER == DIV || node -> value.OPER == MUL)) {
 
-                RightMulDiv1(node, left, right);
                 printf("OPENED RIGHT_MUL_DIV1!\n");
+                RightMulDiv1(node, left, right);
                 counter++;
 
-            } else if(!strcmp(right -> value, "0")) {
+            } else if(right -> type == NUM && right -> value.NUM == 0) {
 
-                RightZero(node, left, right);
                 printf("OPENED RIGHT_ZERO!\n");
+                RightZero(node, left, right);
                 counter++;
 
-            } else if(!strcmp(left -> value, "0")) {
+            } else if(left -> type == NUM && left -> value.NUM == 0) {
 
-                LeftZero(node, left, right);
                 printf("OPENED LEFT_ZERO!\n");
+                LeftZero(node, left, right);
                 counter++;
 
             } 
-            left = node -> left;
-            right = node -> right;
             
+        } else {
+
+            if (node -> value.OPER == POW && left -> type == NUM && left -> value.NUM == 1) {
+                LnLeft1(node, left, right);
+            }
+
         }
+        left = node -> left;
+        right = node -> right;
 
-        counter = SimplificationNode(left, counter);
-        counter = SimplificationNode(right, counter);
+        counter += SimplificationNode(left);
+        counter += SimplificationNode(right);
 
-        printf("Ended iteration with %s\n", node -> value);
+        printf("Ended iteration with %d\n", node -> value.NUM);
 
     } 
     return counter;
 }
 
+void LnLeft1(Node* node, Node* left, Node* right) {
+
+    DtorNode(right);
+    DtorNode(left);
+    node -> type = NUM;
+    node -> left = NULL;
+    node -> right = NULL;
+    node -> value.NUM = 0;
+
+}
+
 void LeftZero(Node* node, Node* left, Node* right) {
-    if(!strcmp(node -> value, "/") || !strcmp(node -> value, "*")) {
+    if(node -> value.OPER == DIV || node -> value.OPER == MUL) {
 
         DtorNode(right);
         DtorNode(left);
         node -> type = NUM;
         node -> left = NULL;
         node -> right = NULL;
-        strcpy(node -> value, "0");
+        node -> value.NUM = 0;
 
-    } else if(!strcmp(node -> value, "+")) {
+    } else if(node -> value.OPER == ADD) {
 
         DtorNode(left);
         node -> type = right -> type;
@@ -102,26 +125,26 @@ void LeftZero(Node* node, Node* left, Node* right) {
 
 void RightZero(Node* node, Node* left, Node* right) {
 
-    if(!strcmp(node -> value, "/")) {
+    if(node -> value.OPER == DIV) {
 
         printf("ZERO DIV!\n");
         exit(0);
 
     }
     
-    if(!strcmp(node -> value, "*")) {
+    if(node -> value.OPER == MUL) {
         
         DtorNode(right);
         DtorNode(left);
         node -> type = NUM;
-        strcpy(node -> value, "0");
+        node -> value.NUM = 0;
         node -> left = NULL;
         node -> right = NULL;   
 
-    } else if(!strcmp(node -> value, "+") || !strcmp(node -> value, "-")) {
+    } else if(node -> value.OPER == ADD || node -> value.OPER == SUB) {
 
         DtorNode(right);
-        printf("value: %s, left: %p, right: %p\n", left -> value, left -> left, left -> right);
+        printf("value: %d, left: %p, right: %p\n", left -> value.OPER, left -> left, left -> right);
         node -> type = left -> type;
         node -> value = left -> value;
         node -> left = left -> left;
@@ -153,36 +176,36 @@ void LeftMul1(Node* node, Node* left, Node* right) {
 
 int LeftRightNum(Node* node, Node* left, Node* right) {
     int res = 0;
-    if(!strcmp(node -> value, "*")) {
+    if(node -> value.OPER == MUL) {
 
-        res = atoi(left -> value)*atoi(right -> value);
+        res = left -> value.NUM*right -> value.NUM;
 
-    } else if(!strcmp(node -> value, "/")) {
+    } else if(node -> value.OPER == DIV) {
 
-        if(!strcmp(right -> value, "0")) {
+        if(right -> value.NUM == 0) {
             printf("ZERO DIV!\n");
             exit(0);
         }
-        res = atoi(left -> value)/atoi(right -> value);
+        res = left -> value.NUM / right -> value.NUM;
 
-    } else if(!strcmp(node -> value, "+")) {
+    } else if(node -> value.OPER == ADD) {
 
-        res = atoi(left -> value)+atoi(right -> value);
+        res = left -> value.NUM + right -> value.NUM;
 
-    } else if(!strcmp(node -> value, "-")) {
+    } else if(node -> value.OPER == SUB) {
 
-        res = atoi(left -> value)-atoi(right -> value);
+        res = left -> value.NUM - right -> value.NUM;
 
-    } else if(!strcmp(node -> value, "^")) {
+    } else if(node -> value.OPER == POW) {
 
-        res = pow(atoi(left->value), atoi(right -> value));
+        res = (int) pow(left->value.NUM, right -> value.NUM);
 
     }
-    printf("numbers: %d and %d\n", atoi(left -> value), atoi(right -> value));
+    printf("numbers: %d and %d\n", left -> value.NUM, right -> value.NUM);
     printf("AT %p RESULT: %d\n", node, res);
 
-    snprintf(node -> value, len_value, "%d", res);
-    printf("and value: %s\n", node -> value);
+    node -> value.NUM = res;
+    printf("and value: %d\n", node -> value.NUM);
     node -> type = NUM;
     node -> left = NULL;
     node -> right = NULL;
@@ -192,9 +215,9 @@ int LeftRightNum(Node* node, Node* left, Node* right) {
     return res;
 }
 
-int IsBinary(char* value) {
-    printf("oper: %s\n", value);
-    if(!strcmp(value, "*") || !strcmp(value, "/") || !strcmp(value, "+") || !strcmp(value, "-") || !strcmp(value, "^")) {
+int IsBinary(VALUE value) {
+    printf("oper: %d\n", value.OPER);
+    if(value.OPER == MUL || value.OPER == DIV || value.OPER == ADD  || value.OPER == SUB || value.OPER == POW) {
         return 1;
     }
     return 0;

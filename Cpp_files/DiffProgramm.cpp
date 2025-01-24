@@ -4,10 +4,11 @@
 #include "Differentiator.h"
 #include "DiffProgramm.h"
 
+#define _ENTER_VALUE(type) new_node -> value.type = value; 
+
 Tree* CtorTree(Tree* tree, Node* root) {
     tree = (Tree*) calloc(1, sizeof(Tree));
     tree -> root = root;
-    tree -> counter = 0;
     return tree;
 }
 
@@ -20,17 +21,21 @@ void DtorNode(Node* node) {
     if(node) {
         DtorNode(node -> right);
         DtorNode(node -> left);
-        free(node -> value);
         free(node);
     }
 }
 
-Node* NewNode(TYPES type, const char* value, Node* left, Node* right) {
+Node* NewNode(TYPES type, int value, Node* left, Node* right) {
     Node* new_node = (Node*) calloc(1, sizeof(Node));
-    new_node -> value = (char*) calloc(len_value, sizeof(char));
 
     new_node -> type = type;
-    strcpy(new_node -> value, value);
+    if(type == VAR) {
+        _ENTER_VALUE(VAR);
+    } else if(type == NUM) {
+        _ENTER_VALUE(NUM);
+    } else {
+        _ENTER_VALUE(OPER);
+    }
     new_node -> left = left;
     new_node -> right = right;
 
@@ -40,40 +45,33 @@ Node* NewNode(TYPES type, const char* value, Node* left, Node* right) {
 Node* Diff(Node* node) {
 
     if(node -> type == NUM) {
-        return _NUM("0");
+        return _NUM(0);
     } 
 
     if(node -> type == VAR) {
-        return _NUM("1");
+        return _NUM(1);
     }
 
-    if (!strcmp(node -> value, "+")) {
+    switch(node -> value.OPER) {
 
-        return _ADD(Diff(node -> left), Diff(node -> right));
+        case ADD:
+            return _ADD(Diff(node -> left), Diff(node -> right));
 
-    } 
-    if (!strcmp(node -> value, "-")){
+        case SUB: 
+            return _SUB(Diff(node -> left), Diff(node -> right));
 
-        return _SUB(Diff(node -> left), Diff(node -> right));
+        case MUL:
+            return MultiplyDiv(node, "*");
 
-    } 
-    if (!strcmp(node -> value, "*")){
+        case DIV:
+            return MultiplyDiv(node, "/");
+ 
+        case POW:
+            return ExponentialDiff(node);
 
-        return MultiplyDiv(node, "*");
-
-    } 
-    if (!strcmp(node -> value, "/")){
-
-        return MultiplyDiv(node, "/");
-
-    } 
-    if(!strcmp(node -> value, "^")) {
-
-        return ExponentialDiff(node);
-
+        default:
+            printf("No such function\n");
     }
-
-    printf("No such function\n");
     return NULL;
 }
 
@@ -108,10 +106,9 @@ Node* CopyNode(Node* node) {
     }
 
     Node* copy_node = (Node*) calloc(1, sizeof(Node));
-    copy_node -> value = (char*) calloc(len_value, sizeof(char));
 
     copy_node -> type = node -> type;
-    strcpy(copy_node -> value, node -> value);
+    copy_node -> value = node -> value;
     copy_node -> left = CopyNode(node -> left);
     copy_node -> right = CopyNode(node -> right);
 

@@ -18,12 +18,13 @@ int main() {
 
     SimplificationTree(start_tree);
     printf("End SimplificationTree!\n");
-    GraphDump(start_tree -> root);
+    GraphDump(start_tree -> root); 
     printf("End graph dump!\n");
 
     Tree* res_tree = 0;
     Node* res = Diff(start_tree -> root);
     GraphDump(res);
+    printf("END DIFF!\n");
 
     res_tree = CtorTree(res_tree, res);
     SimplificationTree(res_tree);

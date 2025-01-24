@@ -45,13 +45,26 @@ void RecursionNode(struct Node* node, FILE* file_dump) {
 
 void PrintfDump(FILE* file_dump, struct Node* node, const char* type_str, const char* color) {
     fprintf(file_dump, "    \"%p\" [shape = Mrecord, style = \"filled\", label = \" { address = %p | { type = %s | ", node, node, type_str);
+
     if(!strcmp(type_str, "NUMBER")) {
-        fprintf(file_dump, "value = %d }", atoi(node -> value));
-        printf("FOR %p VALUE: %d\n", node, atoi(node -> value));
+
+        fprintf(file_dump, "value = %d }", node -> value.NUM); // Написать функцию перевода из enum в oper, num, var
+
+    } else if (!strcmp(type_str, "VARIABLE")) {
+
+        fprintf(file_dump, "value = x }");
+
     } else {
-        fprintf(file_dump, "value = %s }", node -> value);
+
+        fprintf(file_dump, "value = %s }", GetFuncPrintf(node -> value.OPER));
+
     }
     fprintf(file_dump, " | { left = %p | right = %p } } \", fillcolor = \"%s\"]\n", node -> left, node -> right, color);
+}
+
+const char* GetFuncPrintf(int oper) {
+    const char* operations[] = {"+", "/", "-", "*", "^", "(", ")", "sin", "cos", "ln"};
+    return operations[oper];
 }
 
 void GraphDump(Node* node) {

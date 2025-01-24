@@ -2,11 +2,12 @@
 #define READ_PARCER_
 
 #include "Differentiator.h"
+#include "LexicalAnalysis.h"
 
 const int expression_len = 100;
 
 struct Reader {
-    char expr[expression_len];
+    Lexical* reader;
     int counter;
 };
 
@@ -18,7 +19,7 @@ Node* GetD(Reader* parcer);
 Node* GetP(Reader* parcer);
 Node* GetN(Reader* parcer);
 Node* GetT(Reader* parcer);
-void SyntaxError();
+void SyntaxError(int line);
 
 
 #endif //READ_PARCER_
